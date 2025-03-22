@@ -1,14 +1,18 @@
-import './App.css';
-import { Provider } from 'react-redux';
-import { store } from './app/store';
-import Navigation from './components/navigation.component';
+import "./App.css";
+import Navigation from "./components/navigation.component";
+import { BrowserRouter } from "react-router-dom";
+import { CssBaseline, ThemeProvider } from "@mui/material";
+import theme from "./theme";
 
 function App() {
   return (
-    <div className="App">
-      <Provider store={store}>
-        <Navigation/>
-      </Provider>
+    <div className='App'>
+      <BrowserRouter>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Navigation />
+        </ThemeProvider>
+      </BrowserRouter>
     </div>
   );
 }
