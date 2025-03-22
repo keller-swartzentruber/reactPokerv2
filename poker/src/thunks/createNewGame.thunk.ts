@@ -3,15 +3,15 @@ import {
   selectNumberOfPlayers,
   selectPlayerName,
 } from "../app/setupDataSlice";
-import { AppDispatch, RootState } from "../app/store";
+import { AppDispatch, AppGetState } from "../app/store";
 import { Card } from "../models/card.model";
 import { setCardsOnFelt } from "../app/gameDataSlice";
 import { createPlayer } from "../app/playersDataSlice";
 import { BlindType } from "../enums/BlindType";
 
 export const createNewGame = () => {
-  return async (dispatch: AppDispatch, getState: RootState) => {
-    const state = getState;
+  return async (dispatch: AppDispatch, getState: AppGetState) => {
+    const state = getState();
     const numberOfPlayers = selectNumberOfPlayers(state);
     const playerName = selectPlayerName(state);
     const numberOfOpponents = numberOfPlayers - 1;

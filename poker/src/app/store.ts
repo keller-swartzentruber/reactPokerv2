@@ -9,7 +9,6 @@ export const store = configureStore({
     playerData: playerDataReducer,
     gameData: GameDataReducer,
   },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware(),
 });
 
 export default store;
@@ -17,6 +16,7 @@ export default store;
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 export type AppStore = typeof store;
+export type AppGetState = () => RootState;
 
 export type AppThunk<ThunkReturnType = void> = ThunkAction<
   ThunkReturnType,
