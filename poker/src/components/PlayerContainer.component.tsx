@@ -17,4 +17,8 @@ export function PlayerContainer() {
   );
 }
 
-const StyledDiv = styled.div``;
+const StyledDiv = styled.div`
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+`;

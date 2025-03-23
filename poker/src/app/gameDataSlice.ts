@@ -7,11 +7,13 @@ import { GameState } from "../enums/GameState";
 
 export interface GameDataState {
   cardsOnFelt: Card[];
+  currentBet: number;
   gameState: GameState;
 }
 
 const initialState: GameDataState = {
   cardsOnFelt: [],
+  currentBet: 0,
   gameState: GameState.PreFlop,
 };
 
@@ -25,15 +27,22 @@ export const gameDataSlice = createSlice({
     updateGameState(state: GameDataState, action: PayloadAction<GameState>) {
       state.gameState = action.payload;
     },
+    updateCurrentBet(state: GameDataState, action: PayloadAction<number>) {
+      state.currentBet = action.payload;
+    },
   },
 });
 
-export const { setCardsOnFelt, updateGameState } = gameDataSlice.actions;
+export const { setCardsOnFelt, updateGameState, updateCurrentBet } =
+  gameDataSlice.actions;
 
 export const selectCardsOnFelt = (state: RootState): Card[] =>
   state.gameData.cardsOnFelt;
 
 export const selectGameState = (state: RootState): GameState =>
   state.gameData.gameState;
+
+export const selectCurrentBet = (state: RootState): number =>
+  state.gameData.currentBet;
 
 export default gameDataSlice.reducer;

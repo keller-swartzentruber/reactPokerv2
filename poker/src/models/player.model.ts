@@ -9,6 +9,8 @@ export type Player = {
   betValue: number;
   folded: boolean;
   cards: Card[];
+  priorityPassed: boolean;
+  activePlayer: boolean;
 };
 
 export const emptyPlayer: Player = {
@@ -19,4 +21,6 @@ export const emptyPlayer: Player = {
   betValue: 0,
   folded: false,
   cards: [],
+  priorityPassed: false,
+  activePlayer: false,
 };

@@ -1,21 +1,28 @@
-import { setCardsOnFelt } from "../app/gameDataSlice";
+import { setCardsOnFelt, updateCurrentBet } from "../app/gameDataSlice";
 import { bulkUpdatePlayers, selectAllPlayers } from "../app/playersDataSlice";
 import { selectSmallBlindSize } from "../app/setupDataSlice";
 import { AppDispatch, AppGetState } from "../app/store";
 import { BlindType } from "../enums/BlindType";
-import { GameState } from "../enums/GameState";
 import { Player } from "../models/player.model";
 import { deal, getNewBlinds } from "../utils/pokerUtils";
 
-export const handleNewRound = () => {
-  return async (dispatch: AppDispatch, getState: AppGetState) => {
+// after all action has occured and winner / losers have been decided and payed
+export const handleRoundStart = () => {
+  return (dispatch: AppDispatch, getState: AppGetState) => {
+    const state = getState();
+    const smallBlindSize = selectSmallBlindSize(state);
     dispatch(dealAllCards());
     dispatch(cycleBlinds());
+    // this will need updated (could be smaller stack size)
+    dispatch(updateCurrentBet(smallBlindSize * 2));
+
+    // discover player that is up, if not player handleActionPassed
   };
 };
 
+// give new cards to players and table
 export const dealAllCards = () => {
-  return async (dispatch: AppDispatch, getState: AppGetState) => {
+  return (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
     const newDeck = deal();
     const players = selectAllPlayers(state);
@@ -25,6 +32,8 @@ export const dealAllCards = () => {
         ...newPlayers,
         {
           ...player,
+          folded: false,
+          priorityPassed: false,
           cards: newDeck.splice(0, 2).map((card) => {
             const cardShown = player.id === 0;
             return { ...card, isShown: cardShown };
@@ -37,15 +46,16 @@ export const dealAllCards = () => {
   };
 };
 
+// cycles blinds and removes blind amount from little and big
 export const cycleBlinds = () => {
-  return async (dispatch: AppDispatch, getState: AppGetState) => {
+  return (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
     const players = selectAllPlayers(state);
     const littleBlindAmount = selectSmallBlindSize(state);
-    const previousDealerId = players.findIndex(
-      (p) => p.blindType === BlindType.Dealer
+    const previousLittleBlindId = players.findIndex(
+      (p) => p.blindType === BlindType.SmallBlind
     );
-    const newBlinds = getNewBlinds(players.length, previousDealerId);
+    const newBlinds = getNewBlinds(players.length, previousLittleBlindId);
     let newPlayers: Player[] = [];
 
     for (const player of players) {

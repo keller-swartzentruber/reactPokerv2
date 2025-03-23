@@ -7,7 +7,7 @@ import { AppDispatch, AppGetState } from "../app/store";
 import { setCardsOnFelt } from "../app/gameDataSlice";
 import { createPlayer } from "../app/playersDataSlice";
 import { deal, getNewBlinds, shuffleArray } from "../utils/pokerUtils";
-import { handleNewRound } from "./handleNewRound.thunk";
+import { handleRoundStart } from "./handleRoundStart.thunk";
 
 export const createNewGame = () => {
   return async (dispatch: AppDispatch, getState: AppGetState) => {
@@ -16,11 +16,9 @@ export const createNewGame = () => {
     const playerName = selectPlayerName(state);
     const numberOfOpponents = numberOfPlayers - 1;
     const initialStackSize = selectInitialStackSize(state);
-    const deck = deal();
     const startingDealer = Math.floor(Math.random() * numberOfPlayers);
     const startingBlinds = getNewBlinds(numberOfPlayers, startingDealer);
 
-    // dispatch(setCardsOnFelt(deck.splice(0, 5)));
     dispatch(
       createPlayer({
         id: 0,
@@ -29,9 +27,9 @@ export const createNewGame = () => {
         blindType: startingBlinds[0],
         betValue: 0,
         folded: false,
-        cards: deck.splice(0, 2).map((card) => {
-          return { ...card, isShown: true };
-        }),
+        cards: [],
+        priorityPassed: false,
+        activePlayer: false,
       })
     );
 
@@ -47,12 +45,14 @@ export const createNewGame = () => {
           blindType: startingBlinds[i + 1],
           betValue: 0,
           folded: false,
-          cards: deck.splice(0, 2),
+          cards: [],
+          priorityPassed: false,
+          activePlayer: false,
         })
       );
     }
 
-    dispatch(handleNewRound());
+    dispatch(handleRoundStart());
   };
 };
 

@@ -12,6 +12,7 @@ import {
 } from "../../app/setupDataSlice";
 import { useAppDispatch, useAppSelector } from "../../reduxHooks";
 import { createNewGame } from "../../thunks/createNewGame.thunk";
+import { StyledButton } from "../StyledButton";
 
 const GameSetup = () => {
   const dispatch = useAppDispatch();
@@ -88,10 +89,12 @@ const GameSetup = () => {
             />
           </SizedRow>
         </GameSetupContainer>
-        <button onClick={() => navigate("../")}>Return</button>
-        <button onClick={() => handleGameStart()} disabled={playerName === ""}>
-          Play
-        </button>
+        <StyledButton onClick={() => navigate("../")} label='Return' />
+        <StyledButton
+          onClick={() => handleGameStart()}
+          disabled={playerName === ""}
+          label='Play'
+        />
       </PageContainer>
     </>
   );

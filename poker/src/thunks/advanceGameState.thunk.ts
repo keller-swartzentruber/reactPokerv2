@@ -4,12 +4,17 @@ import {
   setCardsOnFelt,
   updateGameState,
 } from "../app/gameDataSlice";
-import { bulkUpdatePlayers, selectAllPlayers } from "../app/playersDataSlice";
+import {
+  bulkUpdatePlayers,
+  newRoundPrioritySet,
+  playerRaised,
+  selectAllPlayers,
+} from "../app/playersDataSlice";
 import { AppDispatch, AppGetState } from "../app/store";
 import { GameState } from "../enums/GameState";
 import { Player } from "../models/player.model";
 import { deal } from "../utils/pokerUtils";
-import { handleNewRound } from "./handleNewRound.thunk";
+import { handleRoundStart } from "./handleRoundStart.thunk";
 
 export const advanceGameState = () => {
   return async (dispatch: AppDispatch, getState: AppGetState) => {
@@ -22,13 +27,14 @@ export const advanceGameState = () => {
         : previousGameState + 1;
 
     if (newGameState === GameState.PreFlop) {
-      dispatch(handleNewRound());
+      dispatch(handleRoundStart());
     }
     dispatch(handleCenterCardsOnGameStateChange(newGameState));
     if (newGameState === GameState.PostRiver) {
       dispatch(flipOpponentCards());
     }
 
+    dispatch(newRoundPrioritySet()); // set all prios to false
     dispatch(updateGameState(newGameState));
   };
 };

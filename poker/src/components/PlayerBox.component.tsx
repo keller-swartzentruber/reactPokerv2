@@ -42,6 +42,7 @@ const PlayerDiv = styled.div`
 const CardContainer = styled.div`
   display: flex;
   flex-direction: row;
+  justify-content: center;
 `;
 
 const CardImage = styled.img`

@@ -1,8 +1,7 @@
 import { BlindType } from "../enums/BlindType";
 import { Card } from "../models/card.model";
 
-// split out if needed
-
+// creates a shuffled array of all cards
 export const deal = (): Card[] => {
   let deck: Card[] = [];
   for (let s = 0; s < 4; s++) {
@@ -21,6 +20,7 @@ export const deal = (): Card[] => {
   return deck;
 };
 
+// shuffles an array using random index swapping
 export const shuffleArray = <T,>(values: T[]): T[] => {
   let localArray = [...values];
   for (let i = localArray.length - 1; i > 0; i--) {
@@ -30,23 +30,24 @@ export const shuffleArray = <T,>(values: T[]): T[] => {
   return localArray;
 };
 
+// returns array in turn order of new blinds
 export const getNewBlinds = (
   numberOfPlayers: number,
-  currentDealer: number
+  currentLittleBlind: number
 ): BlindType[] => {
-  const nextDealer =
-    currentDealer + 1 >= numberOfPlayers ? 0 : currentDealer + 1;
+  const nextDealer = currentLittleBlind;
   const nextSmallBlind = nextDealer + 1 >= numberOfPlayers ? 0 : nextDealer + 1;
   const nextBigBlind =
     nextSmallBlind + 1 >= numberOfPlayers ? 0 : nextSmallBlind + 1;
   const newBlinds: BlindType[] = [];
   for (let i = 0; i < numberOfPlayers; i++) {
-    if (i === nextDealer) {
-      newBlinds.push(BlindType.Dealer);
-    } else if (i === nextSmallBlind) {
+    if (i === nextSmallBlind) {
       newBlinds.push(BlindType.SmallBlind);
     } else if (i === nextBigBlind) {
       newBlinds.push(BlindType.BigBlind);
+    } else if (i === nextDealer) {
+      // dealer needs to be lower so dealer isn't added in two player
+      newBlinds.push(BlindType.Dealer);
     } else {
       newBlinds.push(BlindType.NoBlind);
     }
