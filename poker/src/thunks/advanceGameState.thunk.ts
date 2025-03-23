@@ -80,17 +80,20 @@ export const flipOpponentCards = () => {
   return async (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
     const players = selectAllPlayers(state);
-    const newPlayers: Player[] = [];
+    let newPlayers: Player[] = [];
     for (const player of players) {
-      newPlayers.push({
-        ...player,
-        cards: player.cards.map((c) => {
-          return {
-            ...c,
-            isShown: true,
-          };
-        }),
-      });
+      newPlayers = [
+        ...newPlayers,
+        {
+          ...player,
+          cards: player.cards.map((c) => {
+            return {
+              ...c,
+              isShown: true,
+            };
+          }),
+        },
+      ];
     }
     dispatch(bulkUpdatePlayers(newPlayers));
   };

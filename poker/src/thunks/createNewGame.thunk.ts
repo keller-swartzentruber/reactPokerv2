@@ -7,6 +7,7 @@ import { AppDispatch, AppGetState } from "../app/store";
 import { setCardsOnFelt } from "../app/gameDataSlice";
 import { createPlayer } from "../app/playersDataSlice";
 import { deal, getNewBlinds, shuffleArray } from "../utils/pokerUtils";
+import { handleNewRound } from "./handleNewRound.thunk";
 
 export const createNewGame = () => {
   return async (dispatch: AppDispatch, getState: AppGetState) => {
@@ -19,8 +20,7 @@ export const createNewGame = () => {
     const startingDealer = Math.floor(Math.random() * numberOfPlayers);
     const startingBlinds = getNewBlinds(numberOfPlayers, startingDealer);
 
-    dispatch(setCardsOnFelt(deck.splice(0, 5)));
-
+    // dispatch(setCardsOnFelt(deck.splice(0, 5)));
     dispatch(
       createPlayer({
         id: 0,
@@ -51,6 +51,8 @@ export const createNewGame = () => {
         })
       );
     }
+
+    dispatch(handleNewRound());
   };
 };
 
