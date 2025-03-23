@@ -3,15 +3,16 @@ import { Player } from "../models/player.model";
 import { SetupDataState } from "./setupDataSlice";
 import { RootState } from "./store";
 import { Card } from "../models/card.model";
+import { GameState } from "../enums/GameState";
 
 export interface GameDataState {
   cardsOnFelt: Card[];
-  gameState: number; // switch to enum
+  gameState: GameState;
 }
 
 const initialState: GameDataState = {
   cardsOnFelt: [],
-  gameState: 0,
+  gameState: GameState.PreFlop,
 };
 
 export const gameDataSlice = createSlice({
@@ -21,7 +22,7 @@ export const gameDataSlice = createSlice({
     setCardsOnFelt(state: GameDataState, action: PayloadAction<Card[]>) {
       state.cardsOnFelt = action.payload;
     },
-    updateGameState(state: GameDataState, action: PayloadAction<number>) {
+    updateGameState(state: GameDataState, action: PayloadAction<GameState>) {
       state.gameState = action.payload;
     },
   },
@@ -29,10 +30,10 @@ export const gameDataSlice = createSlice({
 
 export const { setCardsOnFelt, updateGameState } = gameDataSlice.actions;
 
-export const selectCardsOnFelt = (state: RootState, id: number): Card[] =>
+export const selectCardsOnFelt = (state: RootState): Card[] =>
   state.gameData.cardsOnFelt;
 
-export const selectGameState = (state: RootState): number =>
+export const selectGameState = (state: RootState): GameState =>
   state.gameData.gameState;
 
 export default gameDataSlice.reducer;

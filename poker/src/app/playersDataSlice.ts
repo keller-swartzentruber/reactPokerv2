@@ -30,16 +30,28 @@ export const playersDataSlice = createSlice({
       );
       state.players = [...filteredPlayers];
     },
+    bulkUpdatePlayers(
+      state: PlayersDataState,
+      action: PayloadAction<Player[]>
+    ) {
+      let filteredPlayers = state.players.filter(
+        (p) => !action.payload.some((oldPlayer) => oldPlayer.id === p.id)
+      );
+      state.players = [...filteredPlayers, ...action.payload];
+    },
   },
 });
 
-export const { createPlayer, updatePlayer, removePlayer } =
+export const { createPlayer, updatePlayer, removePlayer, bulkUpdatePlayers } =
   playersDataSlice.actions;
 
 export const selectPlayerById = (state: RootState, id: number): Player | null =>
   state.playerData.players.find((p) => p.id === id) ?? null;
 
-export const getAllPlayers = (state: RootState): Player[] =>
+export const selectAllPlayers = (state: RootState): Player[] =>
   state.playerData.players;
+
+export const selectOpponents = (state: RootState): Player[] =>
+  state.playerData.players.filter((f) => f.id !== 0);
 
 export default playersDataSlice.reducer;

@@ -4,10 +4,19 @@ import { Card } from "./card.model";
 export type Player = {
   id: number;
   name: string;
-  cardsShown: boolean;
   stackSize: number;
   blindType: BlindType;
   betValue: number;
   folded: boolean;
   cards: Card[];
+};
+
+export const emptyPlayer: Player = {
+  id: -1,
+  name: "",
+  stackSize: 0,
+  blindType: BlindType.NoBlind,
+  betValue: 0,
+  folded: false,
+  cards: [],
 };
