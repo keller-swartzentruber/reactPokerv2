@@ -1,5 +1,10 @@
-import { selectCurrentBet, updateCurrentBet } from "../app/gameDataSlice";
 import {
+  selectCurrentBet,
+  updateCurrentBet,
+  updatePlayerHasAction,
+} from "../app/gameDataSlice";
+import {
+  selectDoesPlayContinue,
   playerBetAmount,
   playerFolded,
   playerRaised,
@@ -9,27 +14,44 @@ import {
 import { AppDispatch, AppGetState } from "../app/store";
 import { advanceGameState } from "./advanceGameState.thunk";
 
-// after player has taken an action, current bet should be updated
-export const handleActionPassed = () => {
+// starts a betting round starting with startingOpponent (index - 1)
+export const handleActionPassed = (startingOpponent: number) => {
   return async (dispatch: AppDispatch, getState: AppGetState) => {
-    const state = getState();
-    const opponents = selectOpponents(state);
-
     let nextRoundStarted = false;
+    const state = getState();
+    const getsTurn = selectDoesPlayContinue(state);
+    if (!getsTurn) {
+      nextRoundStarted = true;
+    }
 
-    opponents.forEach((opponent, index) => {
-      if (opponent.folded !== true && opponent.stackSize !== 0) {
-        if (opponent.priorityPassed === true) {
-          nextRoundStarted = true;
-          return;
+    // player loses interaction buttons
+    dispatch(updatePlayerHasAction(false));
+
+    // all opponents that will get a bet
+    const opponents = selectOpponents(state);
+    const opponentsPlaying = opponents.slice(startingOpponent);
+    const opponentTurns = opponentsPlaying.map((opponent, index) => {
+      return new Promise<void>((resolve) => {
+        if (opponent.folded !== true && opponent.stackSize !== 0) {
+          if (opponent.priorityPassed === true) {
+            nextRoundStarted = true;
+            resolve();
+            return;
+          }
+          // give player time to see action
+          setTimeout(() => {
+            const playEnded = dispatch(handleOpponentTurn(opponent.id));
+            if (playEnded) nextRoundStarted = true;
+            resolve();
+          }, 500 * (index + 1));
+        } else {
+          resolve();
         }
-        // give player time to see action
-        setTimeout(() => {
-          dispatch(handleOpponentTurn(opponent.id));
-        }, 1000 * (index + 1));
-      }
+      });
     });
 
+    // only advance game state or recurse after all opponent turns have resolved
+    await Promise.all(opponentTurns);
     setTimeout(() => {
       if (nextRoundStarted) {
         dispatch(advanceGameState());
@@ -37,31 +59,30 @@ export const handleActionPassed = () => {
       } else {
         const player = selectPlayerById(state, 0);
         if (player.folded === true) {
-          dispatch(handleActionPassed()); // no brakes
+          dispatch(handleActionPassed(0));
         } else if (player.priorityPassed === true) {
           dispatch(advanceGameState());
+        } else {
+          dispatch(updatePlayerHasAction(true));
         }
       }
-    }, 1000 * (opponents.length + 1));
-
-    // check if player gets action
+    }, 500);
   };
-
-  // for each opponent
-  //  if not folded or all in
-  //    fold, raise, call
-  //    add a couple second wait between each
-  //
 };
 
+// returns if play has finished early due to all players folding or being all in
 export const handleOpponentTurn = (id: number) => {
   return (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
+    const getsTurn = selectDoesPlayContinue(state);
+    if (!getsTurn) {
+      return true;
+    }
     const playerUp = selectPlayerById(state, id);
     const currentBet = selectCurrentBet(state);
     const visibleCards = () => {}; // implement this;
 
-    const randomDecision = Math.floor(Math.random() * 100);
+    const randomDecision = Math.floor(Math.random() * 10);
 
     // player folds
     if (randomDecision < 10) {
@@ -89,5 +110,6 @@ export const handleOpponentTurn = (id: number) => {
         dispatch(playerRaised(id));
       }
     }
+    return false;
   };
 };

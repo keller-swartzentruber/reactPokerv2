@@ -1,22 +1,35 @@
 import { setCardsOnFelt, updateCurrentBet } from "../app/gameDataSlice";
-import { bulkUpdatePlayers, selectAllPlayers } from "../app/playersDataSlice";
+import {
+  bulkUpdatePlayers,
+  selectAllPlayers,
+  selectLittleBlindIndex,
+  selectStartingPlayerIndexOnNewRound,
+} from "../app/playersDataSlice";
 import { selectSmallBlindSize } from "../app/setupDataSlice";
 import { AppDispatch, AppGetState } from "../app/store";
 import { BlindType } from "../enums/BlindType";
 import { Player } from "../models/player.model";
 import { deal, getNewBlinds } from "../utils/pokerUtils";
+import { handleActionPassed } from "./handleActionPassed.thunk";
 
 // after all action has occured and winner / losers have been decided and payed
 export const handleRoundStart = () => {
   return (dispatch: AppDispatch, getState: AppGetState) => {
-    const state = getState();
-    const smallBlindSize = selectSmallBlindSize(state);
     dispatch(dealAllCards());
     dispatch(cycleBlinds());
-    // this will need updated (could be smaller stack size)
-    dispatch(updateCurrentBet(smallBlindSize * 2));
+    dispatch(handleRoundBegins());
+  };
+};
 
-    // discover player that is up, if not player handleActionPassed
+export const handleRoundBegins = () => {
+  return (dispatch: AppDispatch, getState: AppGetState) => {
+    const state = getState();
+    const smallBlindSize = selectSmallBlindSize(state);
+    dispatch(updateCurrentBet(smallBlindSize * 2));
+    const playerUpIndex = selectStartingPlayerIndexOnNewRound(state);
+    if (playerUpIndex !== 0) {
+      dispatch(handleActionPassed(playerUpIndex - 1));
+    }
   };
 };
 

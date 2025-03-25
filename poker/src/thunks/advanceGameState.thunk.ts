@@ -7,13 +7,16 @@ import {
 import {
   bulkUpdatePlayers,
   newRoundPrioritySet,
-  playerRaised,
   selectAllPlayers,
+  selectDoesPlayContinue,
+  selectLittleBlindIndex,
+  selectPlayerById,
 } from "../app/playersDataSlice";
 import { AppDispatch, AppGetState } from "../app/store";
 import { GameState } from "../enums/GameState";
 import { Player } from "../models/player.model";
-import { deal } from "../utils/pokerUtils";
+import { handleActionPassed } from "./handleActionPassed.thunk";
+import { handleRoundEnd } from "./handleRoundEnd.thunk";
 import { handleRoundStart } from "./handleRoundStart.thunk";
 
 export const advanceGameState = () => {
@@ -30,12 +33,27 @@ export const advanceGameState = () => {
       dispatch(handleRoundStart());
     }
     dispatch(handleCenterCardsOnGameStateChange(newGameState));
-    if (newGameState === GameState.PostRiver) {
-      dispatch(flipOpponentCards());
-    }
-
     dispatch(newRoundPrioritySet()); // set all prios to false
     dispatch(updateGameState(newGameState));
+
+    // if the round isn't over
+    if (newGameState !== GameState.PostRiver) {
+      // start again at little blind, checking to ensure player isn't up
+      const startingPlayerIndex = selectLittleBlindIndex(state);
+      if (startingPlayerIndex === 0) {
+        const player = selectPlayerById(state, 0);
+        if (player.folded) {
+          dispatch(handleActionPassed(0));
+        }
+      } else {
+        dispatch(handleActionPassed(startingPlayerIndex - 1));
+      }
+    } else {
+      dispatch(flipOpponentCards());
+      setTimeout(() => {
+        dispatch(handleRoundEnd());
+      }, 500);
+    }
   };
 };
 

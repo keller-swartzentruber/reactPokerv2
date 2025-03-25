@@ -19,4 +19,5 @@ export function StyledButton({ label, onClick, disabled }: Props) {
 const ButtonStyles = styled.button`
   font-size: 25px;
   height: 3rem;
+  flex-grow: 1;
 `;

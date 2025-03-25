@@ -9,12 +9,14 @@ export interface GameDataState {
   cardsOnFelt: Card[];
   currentBet: number;
   gameState: GameState;
+  playerHasAction: boolean;
 }
 
 const initialState: GameDataState = {
   cardsOnFelt: [],
   currentBet: 0,
   gameState: GameState.PreFlop,
+  playerHasAction: true,
 };
 
 export const gameDataSlice = createSlice({
@@ -30,11 +32,21 @@ export const gameDataSlice = createSlice({
     updateCurrentBet(state: GameDataState, action: PayloadAction<number>) {
       state.currentBet = action.payload;
     },
+    updatePlayerHasAction(
+      state: GameDataState,
+      action: PayloadAction<boolean>
+    ) {
+      state.playerHasAction = action.payload;
+    },
   },
 });
 
-export const { setCardsOnFelt, updateGameState, updateCurrentBet } =
-  gameDataSlice.actions;
+export const {
+  setCardsOnFelt,
+  updateGameState,
+  updateCurrentBet,
+  updatePlayerHasAction,
+} = gameDataSlice.actions;
 
 export const selectCardsOnFelt = (state: RootState): Card[] =>
   state.gameData.cardsOnFelt;
@@ -44,5 +56,8 @@ export const selectGameState = (state: RootState): GameState =>
 
 export const selectCurrentBet = (state: RootState): number =>
   state.gameData.currentBet;
+
+export const selectPlayerHasAction = (state: RootState): boolean =>
+  state.gameData.playerHasAction;
 
 export default gameDataSlice.reducer;

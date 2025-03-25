@@ -3,6 +3,7 @@ import { emptyPlayer, Player } from "../models/player.model";
 import { SetupDataState } from "./setupDataSlice";
 import { RootState } from "./store";
 import { Card } from "../models/card.model";
+import { BlindType } from "../enums/BlindType";
 
 export interface PlayersDataState {
   players: Player[];
@@ -58,6 +59,7 @@ export const playersDataSlice = createSlice({
         ...alteredPlayers.slice(raisedPlayerIndex + 1),
       ];
     },
+    // flips all priority passed to false on new round
     newRoundPrioritySet(state: PlayersDataState, action: PayloadAction) {
       let playersArray = [...state.players];
       let alteredPlayers = state.players.map((p) => {
@@ -122,5 +124,30 @@ export const selectAllPlayers = (state: RootState): Player[] =>
 
 export const selectOpponents = (state: RootState): Player[] =>
   state.playerData.players.filter((f) => f.id !== 0);
+
+export const selectLittleBlindIndex = (state: RootState): number =>
+  state.playerData.players.findIndex(
+    (p) => p.blindType === BlindType.SmallBlind
+  );
+
+export const selectStartingPlayerIndexOnNewRound = (
+  state: RootState
+): number => {
+  const bbIndex = state.playerData.players.findIndex(
+    (p) => p.blindType === BlindType.BigBlind
+  );
+  const nextPlayerShouldWrap = bbIndex + 1 >= state.playerData.players.length;
+  const nextPlayerIndex = nextPlayerShouldWrap ? 0 : bbIndex + 1;
+  return nextPlayerIndex;
+};
+
+// if all players but one are folded or all in returns false
+export const selectDoesPlayContinue = (state: RootState): boolean => {
+  const playersAllInOrFolded = state.playerData.players.map((p) => {
+    return p.folded || p.stackSize === 0;
+  });
+  const activePlayers = playersAllInOrFolded.filter((p) => p === false);
+  return activePlayers.length > 1;
+};
 
 export default playersDataSlice.reducer;
