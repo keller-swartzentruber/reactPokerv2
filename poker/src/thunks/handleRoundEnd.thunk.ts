@@ -1,3 +1,4 @@
+import { current } from "@reduxjs/toolkit";
 import { selectCardsOnFelt } from "../app/gameDataSlice";
 import { selectAllPlayers } from "../app/playersDataSlice";
 import { AppDispatch, AppGetState } from "../app/store";
@@ -11,7 +12,8 @@ export const handleRoundEnd = () => {
     const state = getState();
     const players = selectAllPlayers(state);
     const centerCards = selectCardsOnFelt(state);
-    const value = calculatePlayersHandValues(players, centerCards);
+    const handValues = calculatePlayersHandValues(players, centerCards);
+    const payouts = comparePlayersHandsAndStacks(players, handValues);
     // find winning hand(s)
     // find over the top players
     // payout winner(s)
@@ -39,40 +41,67 @@ const calculatePlayersHandValues = (
 const comparePlayersHandsAndStacks = (
   players: Player[],
   handValue: { playerId: number; value: number }[]
-): { id: number; payout: number }[] => {
-  let TotalPot = players
-    .map((p) => {
-      return p.betValue;
-    })
-    .reduce((sum, a) => sum + a, 0);
-  let payouts: { id: number; payout: number }[] = [];
-  let handsLeft = [...handValue];
+): Record<number, number> => {
+  let localPlayers = [...players];
 
-  const strongestHands = Math.max(
-    ...handsLeft.map((h) => {
-      return h.value;
-    })
-  );
-  const winners = handsLeft
-    .filter((h) => h.value === h.value)
-    .map((h) => {
-      return h.playerId;
+  // map players to their bet sizes
+  let playerBetSizes: Record<number, number[]> = {};
+  for (const player of localPlayers) {
+    playerBetSizes[player.betValue] = [
+      ...(playerBetSizes[player.betValue] ?? []),
+      player.id,
+    ];
+  }
+  let sortedBetSizes = Object.keys(playerBetSizes)
+    .sort((a, b) => parseInt(a) - parseInt(b))
+    .map((s) => {
+      return parseInt(s);
     });
 
-  // let remainingPot = TotalPot;
-  // let totalWinnerBets = winners
-  //   .map((winnerId) => {
-  //     return players.find((p) => p.id === winnerId)?.betValue || 0;
-  //   })
-  //   .reduce((sum, bet) => sum + bet, 0);
+  // find all the players in the pots
+  let pots: { playersInPot: number[]; potValue: number }[] = [];
+  let changingBetSizes = [...sortedBetSizes];
+  let lastPotSize = 0;
+  for (const betSize of sortedBetSizes) {
+    const playersStillinPot = sortedBetSizes
+      .map((sb) => {
+        return playerBetSizes[sb];
+      })
+      .flat();
+    pots.push({
+      playersInPot: playersStillinPot,
+      potValue: betSize,
+    });
+    lastPotSize = betSize;
+    // remove value in pot from bet sizes and remove bet size
+    sortedBetSizes = sortedBetSizes
+      .filter((f) => f !== betSize)
+      .map((bs) => {
+        return (bs = bs - betSize);
+      });
+  }
 
-  // winners.forEach((winnerId) => {
-  //   const winnerBet = players.find((p) => p.id === winnerId)?.betValue || 0;
-  //   const winnerPayout = (remainingPot * winnerBet) / totalWinnerBets;
-  //   payouts.push({ id: winnerId, payout: winnerPayout });
-  //   remainingPot -= winnerPayout;
-  // });
-  // i cant do math right now
+  // find winner(s) in pots, and add to payout
+  let payouts: Record<number, number> = {};
+  let localPlayersHands = [...handValue];
+  for (const currentPot of pots) {
+    const currentHands = localPlayersHands.filter((lh) =>
+      currentPot.playersInPot.includes(lh.playerId)
+    );
+    const highestValue = Math.max(
+      ...currentHands.map((h) => {
+        return h.value;
+      })
+    );
+    const winningHands = currentHands.filter((ch) => ch.value === highestValue);
+    for (const winner of winningHands) {
+      payouts[winner.playerId] =
+        (payouts[winner.playerId] ?? 0) +
+        Math.floor(
+          (currentPot.potValue * currentHands.length) / winningHands.length
+        );
+    }
+  }
 
-  return [];
+  return payouts;
 };

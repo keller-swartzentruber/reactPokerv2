@@ -55,6 +55,11 @@ export const getNewBlinds = (
   return newBlinds;
 };
 
+/*
+  known problems: Flush not showing high card in hand
+  Flush not looking down the line to see who has highest flushed card
+  Third value that has highest 'relevant' card in hand?
+*/
 export const getHandValue = (cards: Card[]): number => {
   // get comparison data
   const suites = cards.map((c) => {

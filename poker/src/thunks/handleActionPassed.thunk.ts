@@ -82,7 +82,7 @@ export const handleOpponentTurn = (id: number) => {
     const currentBet = selectCurrentBet(state);
     const visibleCards = () => {}; // implement this;
 
-    const randomDecision = Math.floor(Math.random() * 10);
+    const randomDecision = Math.floor(Math.random() * 100);
 
     // player folds
     if (randomDecision < 10) {
