@@ -4,3 +4,4 @@ export enum BlindType {
   SmallBlind = "SmallBlind",
   BigBlind = "BigBlind",
 }
+

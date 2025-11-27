@@ -6,3 +6,4 @@ export enum GameState {
   River = 4,
   PostRiver = 5,
 }
+

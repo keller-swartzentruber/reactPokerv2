@@ -3,6 +3,7 @@ import {
   selectCurrentBet,
   selectGameState,
   selectPlayerHasAction,
+  selectWaitingForRoundEndContinue,
   updateCurrentBet,
 } from "../app/gameDataSlice";
 import { useAppDispatch, useAppSelector } from "../reduxHooks";
@@ -15,6 +16,7 @@ import {
   selectPlayerById,
 } from "../app/playersDataSlice";
 import { handleActionPassed } from "../thunks/handleActionPassed.thunk";
+import { continueAfterRoundEnd } from "../thunks/handleRoundEnd.thunk";
 import { useState } from "react";
 import { Input, TextField } from "@mui/material";
 
@@ -22,6 +24,9 @@ export function PlayerInputs() {
   const dispatch = useAppDispatch();
   const currentGameState = useAppSelector(selectGameState);
   const playerHasAction = useAppSelector(selectPlayerHasAction);
+  const waitingForRoundEndContinue = useAppSelector(
+    selectWaitingForRoundEndContinue
+  );
   const tableCurrentBet = useAppSelector(selectCurrentBet);
   const player = useAppSelector((state) => selectPlayerById(state, 0));
   const startingRaiseAmount =
@@ -33,12 +38,13 @@ export function PlayerInputs() {
   // should available actions be in state
 
   const handleCall = () => {
-    if (tableCurrentBet !== player.betValue) {
-      dispatch(playerBetAmount({ id: 0, betAmount: tableCurrentBet }));
-      dispatch(handleActionPassed(0));
-    } else {
-      dispatch(handleActionPassed(0));
-    }
+    // add player passed priority
+    // if (tableCurrentBet !== player.betValue) {
+    dispatch(playerBetAmount({ id: 0, betAmount: tableCurrentBet }));
+    //   dispatch(handleActionPassed(0));
+    // } else {
+    dispatch(handleActionPassed(0));
+    // }
   };
 
   const handleFold = () => {
@@ -64,8 +70,17 @@ export function PlayerInputs() {
     }
   };
 
+  const handleContinue = () => {
+    dispatch(continueAfterRoundEnd());
+  };
+
   return (
     <>
+      {waitingForRoundEndContinue && (
+        <ButtonContainer>
+          <StyledButton onClick={handleContinue} label='Continue' />
+        </ButtonContainer>
+      )}
       {playerHasAction && (
         <>
           <div>{currentGameState}</div>

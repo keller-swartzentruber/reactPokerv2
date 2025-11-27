@@ -4,3 +4,4 @@ export enum Suit {
   Spades = 2,
   Clubs = 3,
 }
+

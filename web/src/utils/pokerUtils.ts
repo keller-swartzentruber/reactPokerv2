@@ -1,5 +1,7 @@
 import { BlindType } from "../enums/BlindType";
+import { HandType } from "../enums/HandType";
 import { Card } from "../models/card.model";
+import { HandStrength } from "../models/handStrength.model";
 
 // creates a shuffled array of all cards
 export const deal = (): Card[] => {
@@ -21,7 +23,7 @@ export const deal = (): Card[] => {
 };
 
 // shuffles an array using random index swapping
-export const shuffleArray = <T,>(values: T[]): T[] => {
+export const shuffleArray = <T>(values: T[]): T[] => {
   let localArray = [...values];
   for (let i = localArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -55,12 +57,7 @@ export const getNewBlinds = (
   return newBlinds;
 };
 
-/*
-  known problems: Flush not showing high card in hand
-  Flush not looking down the line to see who has highest flushed card
-  Third value that has highest 'relevant' card in hand?
-*/
-export const getHandValue = (cards: Card[]): number => {
+export const getHandValue = (cards: Card[]): HandStrength => {
   // get comparison data
   const suites = cards.map((c) => {
     return c.suit;
@@ -70,34 +67,68 @@ export const getHandValue = (cards: Card[]): number => {
       if (c.value === 1) return 14;
       return c.value;
     })
-    .sort((a, b) => a - b);
+    .sort((a, b) => b - a);
   const suiteCounts = GiveTopTwoOccurances(suites);
   const hasFlush = suiteCounts.hc >= 5;
   const valueCounts = GiveTopTwoOccurances(ranks);
   const straightCheck = CheckStraight(ranks);
 
-  // check by hand rank
-  if (hasFlush && straightCheck.isStraight && ranks[0] === 14) return 100 + 14;
-  if (hasFlush && straightCheck.isStraight) return 900 + straightCheck.topValue;
-  if (valueCounts.hc === 4) return 800 + valueCounts.hv;
-  if (valueCounts.hc === 3 && valueCounts.sc === 2) return 700 + valueCounts.hv;
+  // check hand rankes and add kickers
+  if (hasFlush && straightCheck.isStraight && ranks[0] === 14) {
+    return { handType: HandType.RoyalFlush, kickers: [] };
+  }
+  if (hasFlush && straightCheck.isStraight) {
+    return {
+      handType: HandType.StraightFlush,
+      kickers: [straightCheck.topValue],
+    };
+  }
+  if (valueCounts.hc === 4) {
+    return {
+      handType: HandType.FourOfAKind,
+      kickers: [valueCounts.hv, valueCounts.sv],
+    };
+  }
+  if (valueCounts.hc === 3 && valueCounts.sc === 2) {
+    return {
+      handType: HandType.FullHouse,
+      kickers: [valueCounts.hv, valueCounts.sv],
+    };
+  }
   if (hasFlush) {
     const flushedValues = cards
       .filter((c) => c.suit === suiteCounts.hv)
       .map((c) => {
         return c.value;
-      });
-    const highestFlush = Math.max(...flushedValues);
-    return 600 + highestFlush;
+      })
+      .sort((a, b) => b - a);
+    return { handType: HandType.Flush, kickers: flushedValues };
   }
   if (straightCheck.isStraight) {
-    return 500 + straightCheck.topValue;
+    return { handType: HandType.Straight, kickers: [straightCheck.topValue] };
   }
-  if (valueCounts.hc === 3) return 400 + valueCounts.hv;
+  if (valueCounts.hc === 3) {
+    return {
+      handType: HandType.ThreeOfAKind,
+      kickers: [valueCounts.hv, ...ranks.filter((r) => r !== valueCounts.hv)],
+    };
+  }
   if (valueCounts.hc === 2 && valueCounts.sc === 2)
-    return 300 + Math.max(valueCounts.hv, valueCounts.sv);
-  if (valueCounts.hc === 2) return 200 + valueCounts.hv;
-  return 100 + ranks[ranks.length - 1];
+    return {
+      handType: HandType.TwoPair,
+      kickers: [
+        valueCounts.hv,
+        valueCounts.sv,
+        ...ranks.filter((r) => r !== valueCounts.hv && r !== valueCounts.sv),
+      ],
+    };
+  if (valueCounts.hc === 2) {
+    return {
+      handType: HandType.OnePair,
+      kickers: [valueCounts.hv, ...ranks.filter((r) => r !== valueCounts.hv)],
+    };
+  }
+  return { handType: HandType.HighCard, kickers: ranks };
 };
 
 const GiveTopTwoOccurances = (values: number[]) => {
@@ -110,10 +141,18 @@ const GiveTopTwoOccurances = (values: number[]) => {
   let secondNumberOfSimilar = -1;
   let valueOfSecondNumber = -1;
   for (const [value, count] of Object.entries(occurances)) {
-    if (count > highestNumberOfSimilar) {
+    if (
+      count >= highestNumberOfSimilar &&
+      parseInt(value) > valueOfHighestNumber
+    ) {
+      secondNumberOfSimilar = highestNumberOfSimilar;
+      valueOfSecondNumber = valueOfHighestNumber;
       highestNumberOfSimilar = count;
       valueOfHighestNumber = parseInt(value);
-    } else if (count > secondNumberOfSimilar) {
+    } else if (
+      count >= secondNumberOfSimilar &&
+      parseInt(value) > valueOfSecondNumber
+    ) {
       secondNumberOfSimilar = count;
       valueOfSecondNumber = parseInt(value);
     }
@@ -129,12 +168,12 @@ const GiveTopTwoOccurances = (values: number[]) => {
 const CheckStraight = (
   values: number[]
 ): { topValue: number; isStraight: boolean } => {
-  let formattedValues = [...new Set(values)];
+  let formattedValues = [...new Set(values)].sort((a, b) => a - b);
   // check for ace wrap around
   if (formattedValues.includes(14)) formattedValues = [1, ...formattedValues];
   let count = 1;
   let prev = -1;
-  for (const value of values) {
+  for (const value of formattedValues) {
     if (value === prev + 1) {
       count++;
     } else {

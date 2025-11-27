@@ -1,4 +1,9 @@
-import { setCardsOnFelt, updateCurrentBet } from "../app/gameDataSlice";
+import {
+  setCardsOnFelt,
+  setRoundPayouts,
+  updateCurrentBet,
+  updatePlayerHasAction,
+} from "../app/gameDataSlice";
 import {
   bulkUpdatePlayers,
   selectAllPlayers,
@@ -15,6 +20,7 @@ import { handleActionPassed } from "./handleActionPassed.thunk";
 // after all action has occured and winner / losers have been decided and payed
 export const handleRoundStart = () => {
   return (dispatch: AppDispatch, getState: AppGetState) => {
+    dispatch(setRoundPayouts(null)); // Clear previous round payouts
     dispatch(dealAllCards());
     dispatch(cycleBlinds());
     dispatch(handleRoundBegins());
@@ -29,6 +35,8 @@ export const handleRoundBegins = () => {
     const playerUpIndex = selectStartingPlayerIndexOnNewRound(state);
     if (playerUpIndex !== 0) {
       dispatch(handleActionPassed(playerUpIndex - 1));
+    } else {
+      dispatch(updatePlayerHasAction(true));
     }
   };
 };

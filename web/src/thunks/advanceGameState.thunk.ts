@@ -3,6 +3,7 @@ import {
   selectGameState,
   setCardsOnFelt,
   updateGameState,
+  updatePlayerHasAction,
 } from "../app/gameDataSlice";
 import {
   bulkUpdatePlayers,
@@ -20,7 +21,7 @@ import { handleRoundEnd } from "./handleRoundEnd.thunk";
 import { handleRoundStart } from "./handleRoundStart.thunk";
 
 export const advanceGameState = () => {
-  return async (dispatch: AppDispatch, getState: AppGetState) => {
+  return (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
     const previousGameState = selectGameState(state);
 
@@ -36,14 +37,15 @@ export const advanceGameState = () => {
     dispatch(newRoundPrioritySet()); // set all prios to false
     dispatch(updateGameState(newGameState));
 
-    // if the round isn't over
     if (newGameState !== GameState.PostRiver) {
-      // start again at little blind, checking to ensure player isn't up
-      const startingPlayerIndex = selectLittleBlindIndex(state);
+      const latestState = getState();
+      const startingPlayerIndex = selectLittleBlindIndex(latestState);
       if (startingPlayerIndex === 0) {
-        const player = selectPlayerById(state, 0);
+        const player = selectPlayerById(latestState, 0);
         if (player.folded) {
           dispatch(handleActionPassed(0));
+        } else {
+          dispatch(updatePlayerHasAction(true));
         }
       } else {
         dispatch(handleActionPassed(startingPlayerIndex - 1));
@@ -58,7 +60,7 @@ export const advanceGameState = () => {
 };
 
 export const handleCenterCardsOnGameStateChange = (newGameState: GameState) => {
-  return async (dispatch: AppDispatch, getState: AppGetState) => {
+  return (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
     let centerCards = selectCardsOnFelt(state);
     let heldCards = [];
@@ -101,7 +103,7 @@ export const handleCenterCardsOnGameStateChange = (newGameState: GameState) => {
 };
 
 export const flipOpponentCards = () => {
-  return async (dispatch: AppDispatch, getState: AppGetState) => {
+  return (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
     const players = selectAllPlayers(state);
     let newPlayers: Player[] = [];

@@ -3,12 +3,14 @@ import { BlindType } from "../enums/BlindType";
 import { Player } from "../models/player.model";
 import CardImages from "../cardImages";
 import { BlindChip } from "./BlindChip.component";
+import { PayoutDisplay } from "./PayoutDisplay.component";
 
 export type Props = {
   player: Player;
+  payout?: number;
 };
 
-export function OpponentBox({ player }: Props) {
+export function OpponentBox({ player, payout }: Props) {
   return (
     <OpponentDiv>
       <StyledLabel>{player.name}</StyledLabel>
@@ -28,6 +30,7 @@ export function OpponentBox({ player }: Props) {
       </CardContainer>
       <StyledLabel>Current Bet: ${player.betValue}</StyledLabel>
       <BlindChip blind={player.blindType} />
+      {payout !== undefined && <PayoutDisplay payout={payout} />}
     </OpponentDiv>
   );
 }

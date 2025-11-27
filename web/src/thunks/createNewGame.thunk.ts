@@ -10,7 +10,7 @@ import { deal, getNewBlinds, shuffleArray } from "../utils/pokerUtils";
 import { handleRoundStart } from "./handleRoundStart.thunk";
 
 export const createNewGame = () => {
-  return async (dispatch: AppDispatch, getState: AppGetState) => {
+  return (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
     const numberOfPlayers = selectNumberOfPlayers(state);
     const playerName = selectPlayerName(state);

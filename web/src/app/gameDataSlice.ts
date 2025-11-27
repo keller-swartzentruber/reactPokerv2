@@ -10,6 +10,8 @@ export interface GameDataState {
   currentBet: number;
   gameState: GameState;
   playerHasAction: boolean;
+  roundPayouts: Record<number, number> | null;
+  waitingForRoundEndContinue: boolean;
 }
 
 const initialState: GameDataState = {
@@ -17,6 +19,8 @@ const initialState: GameDataState = {
   currentBet: 0,
   gameState: GameState.PreFlop,
   playerHasAction: true,
+  roundPayouts: null,
+  waitingForRoundEndContinue: false,
 };
 
 export const gameDataSlice = createSlice({
@@ -38,6 +42,18 @@ export const gameDataSlice = createSlice({
     ) {
       state.playerHasAction = action.payload;
     },
+    setRoundPayouts(
+      state: GameDataState,
+      action: PayloadAction<Record<number, number> | null>
+    ) {
+      state.roundPayouts = action.payload;
+    },
+    setWaitingForRoundEndContinue(
+      state: GameDataState,
+      action: PayloadAction<boolean>
+    ) {
+      state.waitingForRoundEndContinue = action.payload;
+    },
   },
 });
 
@@ -46,6 +62,8 @@ export const {
   updateGameState,
   updateCurrentBet,
   updatePlayerHasAction,
+  setRoundPayouts,
+  setWaitingForRoundEndContinue,
 } = gameDataSlice.actions;
 
 export const selectCardsOnFelt = (state: RootState): Card[] =>
@@ -59,5 +77,12 @@ export const selectCurrentBet = (state: RootState): number =>
 
 export const selectPlayerHasAction = (state: RootState): boolean =>
   state.gameData.playerHasAction;
+
+export const selectRoundPayouts = (
+  state: RootState
+): Record<number, number> | null => state.gameData.roundPayouts;
+
+export const selectWaitingForRoundEndContinue = (state: RootState): boolean =>
+  state.gameData.waitingForRoundEndContinue;
 
 export default gameDataSlice.reducer;
