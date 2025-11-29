@@ -60,7 +60,7 @@ export const calculatePayoutsFromBets = (
       continue;
     }
 
-    // Calculate pot size: each contributing player contributes (betLevel - previousBetLevel)
+    // each contributing player contributes (betLevel - previousBetLevel)
     const contributionPerPlayer = betLevel - previousBetLevel;
     const potValue = contributionPerPlayer * contributingPlayers.length;
 
@@ -103,7 +103,6 @@ export const calculatePayoutsFromBets = (
     const payoutPerWinner = Math.floor(pot.potValue / winners.length);
     const remainder = pot.potValue % winners.length;
 
-    // Distribute pot to winners
     winners.forEach((winner, index) => {
       // Give remainder to first winner(s) if there's leftover
       const payout = payoutPerWinner + (index < remainder ? 1 : 0);

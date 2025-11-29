@@ -141,7 +141,6 @@ export const selectStartingPlayerIndexOnNewRound = (
   return nextPlayerIndex;
 };
 
-// if all players but one are folded or all in returns false
 export const selectDoesPlayContinue = (state: RootState): boolean => {
   const playersAllInOrFolded = state.playerData.players.map((p) => {
     return p.folded || p.stackSize === 0;

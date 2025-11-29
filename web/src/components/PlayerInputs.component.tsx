@@ -29,22 +29,13 @@ export function PlayerInputs() {
   );
   const tableCurrentBet = useAppSelector(selectCurrentBet);
   const player = useAppSelector((state) => selectPlayerById(state, 0));
-  const startingRaiseAmount =
-    tableCurrentBet * 1.5 > player.stackSize
-      ? player.stackSize
-      : tableCurrentBet * 1.5;
-  const [raiseAmount, setRaiseAmount] = useState<number>(startingRaiseAmount);
+  const [raiseAmount, setRaiseAmount] = useState<number>(0);
 
   // should available actions be in state
 
   const handleCall = () => {
-    // add player passed priority
-    // if (tableCurrentBet !== player.betValue) {
     dispatch(playerBetAmount({ id: 0, betAmount: tableCurrentBet }));
-    //   dispatch(handleActionPassed(0));
-    // } else {
     dispatch(handleActionPassed(0));
-    // }
   };
 
   const handleFold = () => {

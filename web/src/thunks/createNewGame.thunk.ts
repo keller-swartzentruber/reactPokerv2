@@ -4,9 +4,8 @@ import {
   selectPlayerName,
 } from "../app/setupDataSlice";
 import { AppDispatch, AppGetState } from "../app/store";
-import { setCardsOnFelt } from "../app/gameDataSlice";
 import { createPlayer } from "../app/playersDataSlice";
-import { deal, getNewBlinds, shuffleArray } from "../utils/pokerUtils";
+import { getNewBlinds, shuffleArray } from "../utils/pokerUtils";
 import { handleRoundStart } from "./handleRoundStart.thunk";
 
 export const createNewGame = () => {

@@ -16,19 +16,16 @@ import { AppDispatch, AppGetState } from "../app/store";
 import { advanceGameState } from "./advanceGameState.thunk";
 import { decideOpponentAction } from "../utils/opponentDecision";
 
-// Helper function to check if betting round should end
 const shouldEndBettingRound = (state: ReturnType<AppGetState>): boolean => {
   const players = selectAllPlayers(state);
   const currentBet = selectCurrentBet(state);
 
-  // Get all active players (not folded, have stack)
   const activePlayers = players.filter((p) => !p.folded && p.stackSize > 0);
 
   if (activePlayers.length <= 1) {
     return true;
   }
 
-  // Check if all active players have passed priority AND matched the current bet
   const allPlayersMatched = activePlayers.every(
     (p) => p.priorityPassed === true && p.betValue === currentBet
   );
@@ -49,20 +46,17 @@ export const handleActionPassed = (startingOpponent: number) => {
     const delay = (ms: number) =>
       new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-    // run each opponent turn sequentially
     for (const opponent of opponentsPlaying) {
       if (opponent.folded === true || opponent.stackSize === 0) {
         continue;
       }
 
-      // Check if this opponent needs to act (hasn't passed priority or hasn't matched bet)
       const currentState = getState();
       const currentBet = selectCurrentBet(currentState);
       const needsToAct =
         !opponent.priorityPassed || opponent.betValue !== currentBet;
 
       if (!needsToAct) {
-        // This opponent has already acted and matched the bet, continue to next
         continue;
       }
 
@@ -70,7 +64,6 @@ export const handleActionPassed = (startingOpponent: number) => {
       await delay(500);
       dispatch(handleOpponentTurn(opponent.id));
 
-      // Check if round should end after this action
       const stateAfterAction = getState();
       if (shouldEndBettingRound(stateAfterAction)) {
         break;
@@ -80,7 +73,6 @@ export const handleActionPassed = (startingOpponent: number) => {
     setTimeout(() => {
       const latestState = getState();
 
-      // Check if betting round should end (all active players have matched bet)
       if (shouldEndBettingRound(latestState)) {
         dispatch(advanceGameState());
         return;
@@ -90,7 +82,6 @@ export const handleActionPassed = (startingOpponent: number) => {
       if (player.folded === true) {
         dispatch(handleActionPassed(0));
       } else {
-        // Check if player needs to act
         const currentBet = selectCurrentBet(latestState);
         const playerNeedsToAct =
           !player.priorityPassed || player.betValue !== currentBet;
@@ -98,11 +89,9 @@ export const handleActionPassed = (startingOpponent: number) => {
         if (playerNeedsToAct) {
           dispatch(updatePlayerHasAction(true));
         } else {
-          // Player has acted, check if round should end
           if (shouldEndBettingRound(latestState)) {
             dispatch(advanceGameState());
           } else {
-            // Continue with next player
             dispatch(handleActionPassed(0));
           }
         }
