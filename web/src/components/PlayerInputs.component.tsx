@@ -50,6 +50,15 @@ export function PlayerInputs() {
     dispatch(handleActionPassed(0));
   };
 
+  const handleAllIn = () => {
+    dispatch(updateCurrentBet(player.stackSize + player.betValue));
+    dispatch(playerRaised(0));
+    dispatch(
+      playerBetAmount({ id: 0, betAmount: player.stackSize + player.betValue })
+    );
+    dispatch(handleActionPassed(0));
+  };
+
   const handleRaiseAmountChanged = (amount: string) => {
     const amountInt = Number.parseInt(amount);
     const raiseValue = Number.isNaN(amountInt) ? 0 : amountInt;
@@ -94,7 +103,7 @@ export function PlayerInputs() {
               value={raiseAmount}
               onChange={(e) => handleRaiseAmountChanged(e.target.value)}
             />
-            <StyledButton onClick={handleFold} label='ALL IN' />
+            <StyledButton onClick={handleAllIn} label='ALL IN' />
           </ButtonContainer>
         </>
       )}

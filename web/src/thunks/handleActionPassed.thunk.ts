@@ -1,8 +1,10 @@
 import {
+  selectCardsOnFelt,
   selectCurrentBet,
   updateCurrentBet,
   updatePlayerHasAction,
 } from "../app/gameDataSlice";
+import { BlindType } from "../enums/BlindType";
 import {
   selectAllPlayers,
   selectDoesPlayContinue,
@@ -15,6 +17,7 @@ import {
 import { AppDispatch, AppGetState } from "../app/store";
 import { advanceGameState } from "./advanceGameState.thunk";
 import { decideOpponentAction } from "../utils/opponentDecision";
+import { getMove, GameState as AiGameState } from "../ai-move-query.api";
 
 const shouldEndBettingRound = (state: ReturnType<AppGetState>): boolean => {
   const players = selectAllPlayers(state);
@@ -62,7 +65,7 @@ export const handleActionPassed = (startingOpponent: number) => {
 
       // give player time to see action
       await delay(500);
-      dispatch(handleOpponentTurn(opponent.id));
+      await dispatch(handleOpponentTurn(opponent.id) as any);
 
       const stateAfterAction = getState();
       if (shouldEndBettingRound(stateAfterAction)) {
@@ -102,14 +105,50 @@ export const handleActionPassed = (startingOpponent: number) => {
 
 // returns if play has finished early due to all players folding or being all in
 export const handleOpponentTurn = (id: number) => {
-  return (dispatch: AppDispatch, getState: AppGetState) => {
+  return async (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
     const getsTurn = selectDoesPlayContinue(state);
     if (!getsTurn) {
       return true;
     }
     const playerUp = selectPlayerById(state, id);
+    const cardsOnFelt = selectCardsOnFelt(state);
+    const allPlayers = selectAllPlayers(state);
     const currentBet = selectCurrentBet(state);
+
+    const pot = allPlayers.reduce((sum, p) => sum + p.betValue, 0);
+
+    const dealerIndex = allPlayers.findIndex(
+      (p) => p.blindType === BlindType.Dealer
+    );
+    const playerIndex = allPlayers.findIndex((p) => p.id === id);
+
+    let positionFromDealer = 0;
+    if (dealerIndex >= 0 && playerIndex >= 0 && allPlayers.length > 0) {
+      positionFromDealer = playerIndex - dealerIndex;
+      if (positionFromDealer < 0) {
+        positionFromDealer += allPlayers.length;
+      }
+    }
+
+    const gameStateForAi: AiGameState = {
+      player_hand: playerUp.cards.map((card) => ({
+        value: card.value,
+        suit: card.suit,
+      })),
+      community_cards: cardsOnFelt.map((card) => ({
+        value: card.value,
+        suit: card.suit,
+      })),
+      pot,
+      player_stack: playerUp.stackSize,
+      current_bet: currentBet,
+      position_from_dealer: positionFromDealer,
+    };
+
+    // Call out to AI service for move suggestion (result currently unused)
+    await getMove(gameStateForAi);
+
     const opponentAction = decideOpponentAction(playerUp, currentBet);
 
     switch (opponentAction.type) {

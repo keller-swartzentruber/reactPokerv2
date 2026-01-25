@@ -10,12 +10,18 @@ export const decideOpponentAction = (
   currentBet: number
 ): OpponentAction => {
   const randomDecision = Math.floor(Math.random() * 100);
+  const amountNeededToCall = currentBet - player.betValue;
+  const canAffordFullCall = player.stackSize > amountNeededToCall;
 
   if (randomDecision < 10) {
     return { type: "fold" };
   }
 
-  if (randomDecision < 90 || player.stackSize <= currentBet) {
+  if (!canAffordFullCall) {
+    return { type: "call", amount: player.stackSize + player.betValue };
+  }
+
+  if (randomDecision < 90) {
     const callAmount = Math.min(player.stackSize, currentBet);
     return { type: "call", amount: callAmount };
   }
@@ -30,4 +36,3 @@ export const decideOpponentAction = (
     newCurrentBet: raiseValue,
   };
 };
-

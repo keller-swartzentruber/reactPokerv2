@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "build": "cd pokerApi && .\\source\\Scripts\\activate && pip install fastapi",
+    "api": "cd pokerApi && source\\Scripts\\activate.bat && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "web": "cd web && npm start"
+  }
+}

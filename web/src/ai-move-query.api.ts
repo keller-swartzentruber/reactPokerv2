@@ -1,8 +1,11 @@
-import { json } from "stream/consumers";
+interface ApiCard {
+  value: number;
+  suit: number;
+}
 
-interface GameState {
-  player_hand: string[]; // e.g. ["Ah", "Kd"]
-  community_cards: string[]; // e.g. ["2c", "7d", "Jh"]
+export interface GameState {
+  player_hand: ApiCard[];
+  community_cards: ApiCard[];
   pot: number;
   player_stack: number;
   current_bet: number;
@@ -11,15 +14,15 @@ interface GameState {
 
 interface AIMoveResponse {
   move: string; // e.g. "raise", "fold", etc.
-  confidence: number; // e.g. 0.85
+  value: number; // 0 if not raise
 }
 
-async function getMove(gameState: string) {
+export async function getMove(gameState: GameState) {
   const response = await fetch("http://localhost:8000/ai/move", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(gameState),
   });
   const data: AIMoveResponse = await response.json();
-  return data.move;
+  return data;
 }
